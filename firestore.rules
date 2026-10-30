@@ -1,0 +1,54 @@
+// ============================================================================
+// Chithi / PulseChat Firestore security rules — security model:
+//   users/{userId}              read: any signed-in user (needed for contact
+//                               lists / presence); write: ONLY the owning user
+//                               (document id == request.auth.uid). The public
+//                               doc carries NO email address (Phase 0.9).
+//   users/{userId}/private/**   read/write: ONLY the owning user. Holds the
+//                               private contact doc ({email}) that used to be
+//                               exposed on the public profile doc.
+//   messages/{messageId}        read/write: signed-in users only. Room-level
+//                               ACLs should be added here once room membership
+//                               is modeled (e.g. via custom claims/documents).
+//   activities/{activityId}     create: signed-in user, only for their own
+//                               userId; read: only the owning user or an admin
+//                               claim holder; no update/delete from clients.
+//   twoFactorVerifications/     SERVER-ONLY. No client read or write at all.
+//                               Email verification codes are issued and
+//                               verified by the server.ts endpoints; clients
+//                               must never see another user's (or their own)
+//                               code in Firestore.
+// ============================================================================
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+
+      // Private subcollection (e.g. private/contact {email}) — owner only.
+      match /private/{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    match /messages/{messageId} {
+      allow read, write: if request.auth != null;
+    }
+
+    match /activities/{activityId} {
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null
+                  && (request.auth.uid == resource.data.userId
+                      || request.auth.token.admin == true);
+      allow update, delete: if false;
+    }
+
+    match /twoFactorVerifications/{emailId} {
+      // Server-only collection — client access denied entirely.
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,307 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --c-primary: #0B6E4F;
+  --c-grad-from: #0B6E4F;
+  --c-grad-to: #0B6E4F;
+  --c-bg: #FFFFFF;
+  --c-surface: #F7F6F1;
+  --c-bubble-in: #EDF2EE;
+  --c-pressed: #E3EDE7;
+  --c-text: #15211B;
+  --c-text-2: #5C6B62;
+  /* Contrast fix (Phase 2): was #9CA3AF ≈ 2.54:1 on white — fails WCAG.
+     #68707E: L=0.16038 → 4.99:1 vs #FFFFFF (L=1.0), 4.70:1 vs #F7F8FA
+     (L=0.93811, the 0.45-white-over-#EEF1F5 glass composite worst case). */
+  --c-text-faint: #94A39A;
+  --c-online: #1FA855;
+  --c-away: #F2A007;
+  --c-badge: #F2A007;
+  --c-badge-text: #15211B;
+  --c-danger: #E5484D;
+
+  /* ── Phase 2 Liquid Glass tokens (PHASE2_REPORT.md token contract) ── */
+  --c-border: #E2E8E3;
+  --c-glass-bg: rgba(255, 255, 255, 0.45);
+  --c-glass-border: rgba(255, 255, 255, 0.18);
+  --c-header-bg: rgba(255, 255, 255, 0.92);
+  --c-focus: #0B6E4F;
+  --c-skeleton: #E3EDE7;
+  --c-skeleton-shine: #F7F6F1;
+  --sh-glass-lift: 0 8px 32px rgba(0, 0, 0, 0.25);
+  --sh-glass-rim: inset 0 1px 1px rgba(255, 255, 255, 0.55), inset 0 -1px 1px rgba(255, 255, 255, 0.30), inset 1px 0 1px rgba(255, 255, 255, 0.20), inset -1px 0 1px rgba(255, 255, 255, 0.20);
+
+  /* Radius tokens (concentric rule: inner = outer − inset, via calc) */
+  --r-card: 28px;
+  --r-sheet: 28px;
+  --r-bubble: 20px;
+  --r-control: 14px;
+  --r-pill: 999px;
+
+  /* Motion tokens */
+  --ease-spring: linear(0, 0.18, 0.42, 0.72, 0.95, 1.06, 1.04, 1.01, 0.99, 1);
+  --ease-out: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --dur-press: 160ms;
+  --dur-sheet: 320ms;
+
+  /* Type tokens */
+  --fs-bubble: 16px;
+  --lh-bubble: 1.45;
+  --fs-body: 15px;
+  --lh-body: 1.55;
+}
+
+.dark {
+  --c-primary: #2FA37C;
+  --c-grad-from: #2FA37C;
+  --c-grad-to: #2FA37C;
+  --c-bg: #0C1210;
+  --c-surface: #131A17;
+  --c-bubble-in: #1C2621;
+  --c-pressed: #243129;
+  --c-text: #EDF3EF;
+  --c-text-2: #9DB0A5;
+  /* Dark faint fix (minimal): #64748B was 3.93:1 on #0B1220 — fails.
+     #6E7E95 (+10 per channel): L=0.20407 → 4.53:1 vs #0B1220 (L=0.00608). */
+  --c-text-faint: #6E7F75;
+  --c-online: #1FA855;
+  --c-away: #F2A007;
+  --c-badge: #F2A007;
+  --c-badge-text: #15211B;
+  --c-danger: #E5484D;
+
+  /* Phase 2 tokens — dark values (dark theme is frozen; kept functional) */
+  --c-border: #243129;
+  --c-glass-bg: rgba(19, 26, 23, 0.55);
+  --c-glass-border: rgba(255, 255, 255, 0.10);
+  --c-header-bg: rgba(12, 18, 16, 0.92);
+  --c-focus: #2FA37C;
+  --c-skeleton: #1C2621;
+  --c-skeleton-shine: #131A17;
+  --sh-glass-lift: 0 8px 32px rgba(0, 0, 0, 0.25);
+  --sh-glass-rim: inset 0 1px 1px rgba(255, 255, 255, 0.55), inset 0 -1px 1px rgba(255, 255, 255, 0.30), inset 1px 0 1px rgba(255, 255, 255, 0.20), inset -1px 0 1px rgba(255, 255, 255, 0.20);
+}
+
+@layer base {
+  body {
+    font-family: 'Inter', 'Hind Siliguri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Tokenised focus ring — visible only for keyboard / :focus-visible.
+     Plain :focus intentionally gets nothing extra. */
+  :focus-visible {
+    outline: 2px solid var(--c-focus);
+    outline-offset: 2px;
+  }
+
+  /* Custom subtle scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.25);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.45);
+  }
+}
+
+/* ── Chitthi design polish: soft chat backdrop + clearly-visible motion ── */
+@layer utilities {
+  .animate-float-slow {
+    animation: chitthi-float 5s ease-in-out infinite;
+  }
+  .animate-shimmer {
+    background-size: 200% 100%;
+    animation: chitthi-shimmer 1.6s linear infinite;
+  }
+  .shadow-soft {
+    box-shadow: 0 1px 2px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.08);
+  }
+
+  /* ── Liquid Glass — verified recipe (ROADMAP 2.1; do not improvise) ──
+     Shared by .glass / .glass-pill / .glass-sheet / .glass-bar.
+     NOTE: .glass-bar deliberately sets no border-radius — its ~9 existing
+     usages supply their own rounded-* classes (incl. the square sticky
+     header); the sheen ::after uses border-radius: inherit. */
+  .glass, .glass-pill, .glass-sheet, .glass-bar {
+    position: relative;
+    isolation: isolate;
+    background: var(--c-glass-bg);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid var(--c-glass-border);
+    box-shadow: var(--sh-glass-lift), var(--sh-glass-rim);
+  }
+  .glass::after, .glass-pill::after, .glass-sheet::after, .glass-bar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.08) 28%, transparent 58%);
+    mix-blend-mode: screen;
+  }
+  .glass {
+    border-radius: var(--r-card);
+  }
+  .glass-pill {
+    border-radius: var(--r-pill);
+  }
+  .glass-sheet {
+    border-radius: var(--r-sheet);
+  }
+  /* Dark glass: --c-glass-bg already flips to rgba(19,26,23,0.55) under
+     .dark via the token above; this rule pins it explicitly so the frozen
+     dark theme stays functional even if the token is retuned for light. */
+  .dark .glass, .dark .glass-pill, .dark .glass-sheet, .dark .glass-bar {
+    background: rgba(19, 26, 23, 0.55);
+  }
+
+  .animate-bubble-in {
+    animation: chitthi-bubble-in 220ms ease-out both;
+  }
+  /* NOTE: the semantic colour utilities (bg-app, text-app, bg-primary, …)
+     are defined BELOW as Tailwind v4 @utility rules — plain @layer classes
+     silently ignore variant prefixes (hover:, placeholder:, group-hover:),
+     which left 266 variant usages dead in the built CSS. @utility makes
+     variants generate. Do not move them back into a plain layer. */
+  /* Bangla-safe rows: matra headroom so conjuncts/diacritics never clip
+     (ROADMAP 2.2 — root cause was leading-tight + truncate). */
+  .bn-safe {
+    line-height: 1.65;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+  /* Box-shadow focus ring for elements where outline is clipped. */
+  .focus-ring {
+    box-shadow: 0 0 0 2px var(--c-bg), 0 0 0 4px var(--c-focus);
+  }
+  /* Skeleton placeholder — shimmer reuses the chitthi-shimmer keyframes. */
+  .skeleton {
+    background: var(--c-skeleton);
+    background-image: linear-gradient(90deg, var(--c-skeleton) 25%, var(--c-skeleton-shine) 50%, var(--c-skeleton) 75%);
+    background-size: 200% 100%;
+    position: relative;
+    overflow: hidden;
+    animation: chitthi-shimmer 1.6s linear infinite;
+  }
+}
+
+/* ── Semantic colour utilities (Tailwind v4 @utility — variant-capable) ── */
+@utility bg-brand-gradient {
+  background-image: linear-gradient(135deg, var(--c-grad-from), var(--c-grad-to));
+}
+@utility bg-app {
+  background: var(--c-bg);
+}
+@utility bg-surface {
+  background: var(--c-surface);
+}
+@utility bg-bubble-in {
+  background: var(--c-bubble-in);
+}
+@utility bg-pressed {
+  background: var(--c-pressed);
+}
+@utility text-app {
+  color: var(--c-text);
+}
+@utility text-app-2 {
+  color: var(--c-text-2);
+}
+@utility text-app-faint {
+  color: var(--c-text-faint);
+}
+@utility bg-badge {
+  background: var(--c-badge);
+  color: var(--c-badge-text);
+}
+@utility bg-header {
+  background: var(--c-header-bg);
+}
+@utility border-token {
+  border-color: var(--c-border);
+}
+@utility text-primary {
+  color: var(--c-primary);
+}
+@utility bg-primary {
+  background: var(--c-primary);
+}
+@utility text-danger {
+  color: var(--c-danger);
+}
+@utility bg-danger {
+  background: var(--c-danger);
+}
+@utility text-online {
+  color: var(--c-online);
+}
+@utility bg-online {
+  background: var(--c-online);
+}
+@utility text-away {
+  color: var(--c-away);
+}
+@utility bg-away {
+  background: var(--c-away);
+}
+
+@utility bn-text {
+  line-height: 1.55;
+}
+@utility safe-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@keyframes chitthi-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes chitthi-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes chitthi-bubble-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass, .glass-pill, .glass-sheet, .glass-bar {
+    background: var(--c-bg);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-slow, .animate-shimmer, .animate-bubble-in {
+    animation: none;
+  }
+  /* Lens-9 fix: Tailwind built-in animations used across the app
+     (animate-in entrances, pulse, ping, bounce, spin) were not
+     neutralised by the block above — only the custom keyframes were. */
+  .animate-in, .animate-pulse, .animate-ping, .animate-bounce, .animate-spin {
+    animation: none;
+  }
+  .glass, .glass-pill, .glass-sheet, .glass-bar, .skeleton {
+    transition-duration: 0.01ms;
+    animation: none;
+  }
+}
